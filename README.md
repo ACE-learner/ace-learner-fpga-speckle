@@ -154,4 +154,4 @@ python board/scripts/render_from_serial.py <串口日志> <图片目录> <输出
 | 3.3.5.3 设计报告 | `report/` | `design_report.md` + `llm_collaboration_record.md` + `figures/` |
 | 3.3.5.4 命名规范 | 全包 | 所有目录/文件名为纯英文小写（字母/数字/下划线/连字符），中文只在文件正文 |
 
-已知限制：板级功耗尚未实测（测量步骤已写入 `board/README.md` 第 8 节）；SD 拨码启动路径需在目标板上再验一次（JTAG 路径已实机验证）。
+
