@@ -1,0 +1,4 @@
+﻿dataset,board_gt_hit_percent,pc_gt_hit_percent,board_mean_conf,pc_mean_conf,board_ms_per_frame,note
+philips_a3c_rca_50f,66.5,68.72,0.507,0.503,421.49,legacy decode rule; both from same 642x488 frames
+toshiba_a4c_normal_54f,73.87,77.88,0.47,0.48,421.57,legacy decode rule; both from same 636x489 frames
+toshiba_a4c_normal_54f_newrule,79.12,77.88,0.459,0.480,421.5,new YOLO class-assignment decode rule; 54/54 frames complete

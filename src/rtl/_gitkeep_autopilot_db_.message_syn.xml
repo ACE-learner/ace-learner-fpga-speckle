@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Messages>
+	<Message severity="INFO" prefix="[SCHED 204-61]" key="SCHED_PIPELINING_STATUS_631" tag="SCHEDULE" content="Option &apos;relax_ii_for_timing&apos; is enabled, will increase II to preserve clock frequency constraints."/>
+	<Message severity="INFO" prefix="[HLS 200-10]" key="HLS_10_1312" tag="" content="Analyzing design file &apos;yolov4_tiny_hls/src/conv.cpp&apos; ..."/>
+	<Message severity="WARNING" prefix="[HLS 200-40]" key="HLS_40_1378" tag="" content="In file included from yolov4_tiny_hls/src/conv.cpp:1:
+In file included from yolov4_tiny_hls/src/conv.h:2:
+yolov4_tiny_hls/src/std_conv.h:8:9: warning: &apos;Tm&apos; macro redefined
+#define Tm 32
+        ^
+yolov4_tiny_hls/src/pwconv.h:5:9: note: previous definition is here
+#define Tm 8
+        ^
+In file included from yolov4_tiny_hls/src/conv.cpp:1:
+In file included from yolov4_tiny_hls/src/conv.h:2:
+yolov4_tiny_hls/src/std_conv.h:11:9: warning: &apos;MAX_LEN&apos; macro redefined
+#define MAX_LEN 512
+        ^
+yolov4_tiny_hls/src/pwconv.h:6:9: note: previous definition is here
+#define MAX_LEN 1024
+        ^
+2 warnings generated."/>
+	<Message severity="INFO" prefix="[HLS 200-10]" key="HLS_10_1312" tag="" content="Analyzing design file &apos;yolov4_tiny_hls/src/maxpool.cpp&apos; ..."/>
+	<Message severity="INFO" prefix="[HLS 200-10]" key="HLS_10_1312" tag="" content="Analyzing design file &apos;yolov4_tiny_hls/src/pwconv.cpp&apos; ..."/>
+	<Message severity="INFO" prefix="[HLS 200-10]" key="HLS_10_1312" tag="" content="Analyzing design file &apos;yolov4_tiny_hls/src/std_conv.cpp&apos; ..."/>
+	<Message severity="WARNING" prefix="[HLS 200-40]" key="HLS_40_1378" tag="" content="In file included from yolov4_tiny_hls/src/std_conv.cpp:1:
+In file included from yolov4_tiny_hls/src/conv.h:2:
+yolov4_tiny_hls/src/std_conv.h:8:9: warning: &apos;Tm&apos; macro redefined
+#define Tm 32
+        ^
+yolov4_tiny_hls/src/pwconv.h:5:9: note: previous definition is here
+#define Tm 8
+        ^
+In file included from yolov4_tiny_hls/src/std_conv.cpp:1:
+In file included from yolov4_tiny_hls/src/conv.h:2:
+yolov4_tiny_hls/src/std_conv.h:11:9: warning: &apos;MAX_LEN&apos; macro redefined
+#define MAX_LEN 512
+        ^
+yolov4_tiny_hls/src/pwconv.h:6:9: note: previous definition is here
+#define MAX_LEN 1024
+        ^
+2 warnings generated."/>
+</Messages>

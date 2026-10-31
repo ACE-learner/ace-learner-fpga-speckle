@@ -1,0 +1,19 @@
+# PC-side dependencies for the FPGA speckle keypoint project
+# Tested on: Python 3.13.16, Windows 10/11 64-bit
+# Install:  pip install -r requirements.txt
+
+# --- required for image encoding / result rendering / board-result evaluation ---
+numpy>=1.20
+pillow>=8.0
+
+# --- optional: PC reference evaluation (sim/scripts/eval_pc_gt.py) ---
+# CPU build is enough:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch>=1.8
+
+# --- optional: PYNQ skill package (run on a PYNQ board, not on PC) ---
+# pynq>=2.5
+
+# Board-side requirements are NOT Python packages:
+#   - Vivado / SDK 2018.3 (only for rebuilds)
+#   - SD card (FAT32), JTAG (FTDI 0403:6014), USB-UART (CH340, 115200-8-N-1)

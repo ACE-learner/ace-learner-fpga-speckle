@@ -1,0 +1,6 @@
+the_ROM_image:
+{
+  [bootloader]board/bitstream/zynq_fsbl.elf
+  board/bitstream/system_wrapper.bit
+  board/bitstream/yolov4_tiny.elf
+}
