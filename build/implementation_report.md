@@ -7,19 +7,20 @@
 | FPGA / SoC | Xilinx Zynq-7020（XC7Z020） |
 | 工具链 | Vivado + Vitis/SDK **2018.3** |
 | HLS 目标时钟 | 10 ns（100 MHz） |
-| PL 实际时钟 FCLK0 | **120 MHz** |
+| PL 实际时钟 FCLK0 | **100 MHz**（收敛版；120 MHz 对比见 §6） |
 | 卷积数据类型 | `ap_fixed<16,7, AP_RND, AP_SAT>`，外部整型缩放 `SCALE = 512` |
+| 源码中的时钟配置 | `src/vivado/system_bd.tcl` 已设 `PCW_FPGA0_PERIPHERAL_FREQMHZ=100`；重建需同步重编 FSBL（见 §6） |
 
 ## 2. 资源占用（实现后，Vivado 官方报告）
 
 | 资源 | 使用量 | 可用量 | 利用率 |
 |---|---|---|---|
-| Slice LUTs | 43,946 | 53,200 | **82.61%** |
-| LUT as Logic | 35,840 | 53,200 | 67.37% |
-| Slice Registers (FF) | 42,933 | 106,400 | 40.35% |
+| Slice LUTs | 43,980 | 53,200 | **82.67%** |
+| LUT as Logic | 35,873 | 53,200 | 67.43% |
+| Slice Registers (FF) | 42,901 | 106,400 | 40.32% |
 | Block RAM Tile | 94.5 | 140 | **67.50%** |
 | DSP48 | 218 | 220 | **99.09%** |
-| 功耗（Total On-Chip） | 3.212 W | — | 动态 2.999 W + 静态 0.214 W |
+| 功耗（Total On-Chip） | **2.953 W** | — | 动态 2.753 W + 静态 0.200 W（100 MHz，Vivado 估算） |
 
 > DSP 使用率 99.09% 是当前性能的**硬瓶颈**：进一步提速需要算法级改动（如 int8 量化、Winograd 或降低输入分辨率）。
 
@@ -27,27 +28,23 @@
 
 | 指标 | 值 |
 |---|---|
-| 约束时钟 | `clk_fpga_0`，周期 **8.333 ns（120.005 MHz）** |
-| **WNS（Setup）** | **−0.921 ns** |
-| **TNS** | **−14.393 ns** |
-| **失败端点** | **61**（Setup）；Hold 0 失败（WHS = +0.036 ns） |
-| 关键失败路径 | `system_i/conv_0/inst/grp_upsample_fu_361/p_sum_reg_664_reg[13]/D`（**upsample 功能的累加器**） |
+| 约束时钟 | `clk_fpga_0`，周期 **10.000 ns（100.000 MHz）** |
+| **WNS（Setup）** | **+0.336 ns**（收敛） |
+| **TNS** | **0 ns** |
+| **失败端点** | **0**（Setup）；Hold 0 失败（WHS = +0.034 ns） |
+| 原 120 MHz 失败路径 | `system_i/conv_0/inst/grp_upsample_fu_361/p_sum_reg_664_reg[13]/D`（upsample 累加器，降频后满足） |
 | HLS 目标时钟 | 10 ns（100 MHz） |
 
-**结论与建议**：
-- 负时序余量来自把 HLS 按 100 MHz 设计的 IP 跑在 120 MHz 上，关键路径落在 **upsample（上采样）** 的累加逻辑；
-- 修复方案（按收益排序）：
-  1. FCLK0 降到 **100 MHz** 重新实现（最直接，预期 WNS > 0）；
-  2. 对 `upsample` 的累加路径增加流水级（+1~2 级 pipeline）；
-  3. 对该路径加 `set_max_delay`/物理约束并优化布局（需谨慎）。
-- 当前功能实测：板端与 PC 的关键点一致性 96.7%（≤2 px），断电重启结果逐位一致，未观察到偶发错误，但**负 slack 仍是可靠性隐患**，提交前建议修复。
+**结论**：
+- 原 120 MHz 版本把 HLS 按 100 MHz 设计的 IP 跑在 120 MHz 上，资源占用高（LUT 82.7%、DSP 99.1%）导致 WNS −0.921 ns；
+- 已采用 **FCLK0 = 100 MHz** 重新实现：WNS **+0.336 ns**、TNS 0、0 失败端点，时序收敛；
+- 板端实测：100 MHz 版 496.6 ms/帧、2.01 FPS，输出的 1899 条关键点记录与 120 MHz 版**逐位一致**（频率只影响耗时，不影响精度）。
 
 ## 3.1 原始报告文件（`build/reports/`）
 
 | 文件 | 内容 |
 |---|---|
-| `utilization_placed.rpt` | 实现后资源占用（上表数据来源） |
-| `utilization_synth.rpt` | 综合后资源占用 |
+| `utilization_routed.rpt` | 100 MHz 实现后资源占用（上表数据来源） |
 | `timing_summary_routed.rpt` | 布线后时序汇总（WNS/TNS/失败端点） |
 | `power_routed.rpt` | 功耗估算 |
 | `clock_utilization_routed.rpt` | 时钟资源使用 |
@@ -57,8 +54,9 @@
 
 | 指标 | 值 | 说明 |
 |---|---|---|
-| 单帧推理 | **421.5 ms** | `forward()` 全程（含 PL→PS 数据传输），54~50 帧平均值 |
-| 吞吐 | **2.37 FPS** | 120 MHz 时钟 |
+| 单帧推理 | **496.6 ms** | `forward()` 全程（含 PL→PS 数据传输），A4C 54 帧实测 |
+| 吞吐 | **2.01 FPS** | 100 MHz 时钟（120 MHz 版 2.37 FPS 仅作对比） |
+| 峰值算力 | **43.6 GOPS** | 218 DSP × 2 × 100 MHz（120 MHz 版 52.32 GOPS） |
 | ARM 关键点后处理 | **2.0 ms/帧** | 每类 top-1 + sigmoid 解码，约 91k MAC |
 | 串口输出开销 | ≈ 90 ms/帧 | 36 行文本 @115200；可关闭 |
 | SD 写盘（旧版本） | ≈ 40~90 ms/帧 | 新版本已取消 out 文件写盘，改为串口输出 |
@@ -122,6 +120,28 @@ PyTorch 权重（Oct-20 版本）→ BN 折叠：
 | 逐点误差 | 中位 5.85 px，平均 7.01 px，90 分位 13.74 px |
 | 每帧命中 | 平均 28.5 / 36（最好 35，最差 21） |
 | 弱类 | cls28(39%)、cls31(43%)、cls29(50%)、cls6/16(56%) |
-| 证据 | `board/logs/log_toshiba_a4c_54f_newrule.txt`；指标 CSV 见 `sim/results/` |
+| 证据 | `board/logs/log_toshiba_a4c_54f_100mhz.txt`；指标 CSV 见 `sim/results/` |
 
-> 注意：片上功耗 3.212 W 为 Vivado vectorless 估算；板级功耗需按 `board/README.md` 第 8 节实测，两者口径不同。
+> 注意：片上功耗 2.953 W 为 Vivado vectorless 估算；板级功耗需按 `board/README.md` 第 8 节实测，两者口径不同。
+
+## 6. 频率版本对比与最终选择（2026-11-01）
+
+| 指标 | 120 MHz（原始实现） | **100 MHz（交付版）** |
+|---|---|---|
+| WNS / TNS | −0.921 / −14.393 ns | **+0.336 / 0 ns** |
+| Setup 失败端点 | 61 | **0** |
+| 约束时钟 | 8.333 ns / 120.005 MHz | **10.000 ns / 100.000 MHz** |
+| Fmax（1/(T−WNS)） | 108.1 MHz | 103.5 MHz |
+| 单帧推理（实测） | 421.5 ms | **496.6 ms** |
+| 帧率 | 2.37 FPS | **2.01 FPS** |
+| 峰值算力（218×2×f） | 52.32 GOPS | 43.6 GOPS |
+| 功耗估算 | 3.212 W（2.999 + 0.214） | **2.953 W**（2.753 + 0.200） |
+| 能效（峰值算力/估算功耗） | 16.29 GOPS/W | 14.77 GOPS/W |
+| 关键点输出 | 1899 条 K 行 | **与 120 MHz 逐位一致（1899/1899）** |
+
+选择依据：Zynq-7020 上同设计在 120 MHz 时序未收敛（LUT 82.67%、DSP 99.09% 导致布线拥塞）；
+降到 100 MHz 后时序收敛、功耗略降，精度完全不变，代价是吞吐下降约 15%。
+120 MHz 版本的报告原文保留在 `reports/historical_120mhz/`。
+
+复测报告（100 MHz，2026-10-31 重新生成）：`reports/timing_summary_routed.rpt`、`reports/power_routed.rpt`、
+`reports/utilization_routed.rpt`、`reports/clock_utilization_routed.rpt`、`reports/drc_routed.rpt`。

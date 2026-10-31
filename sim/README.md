@@ -42,8 +42,8 @@ python sim/scripts/generate_validation_results.py
 # 期望（legacy）：66.50% / 73.87%，determinism 差分 0
 
 # 4) 新规则板端日志评测（不需要 torch）
-python board/scripts/eval_serial_vs_gt.py board/logs/log_toshiba_a4c_54f_newrule.txt data/images_toshiba_a4c data/labels_toshiba_a4c
-# 期望：1538/1944 = 79.12%
+python board/scripts/eval_serial_vs_gt.py board/logs/log_toshiba_a4c_54f_100mhz.txt data/images_toshiba_a4c data/labels_toshiba_a4c
+# 期望：1538/1944 = 79.12%（日志为 100 MHz 54 帧运行，496.6 ms/帧）
 ```
 
 依赖版本见根目录 `ENVIRONMENT.md`；PC 端需要 `numpy`、`pillow`，只有 `eval_pc_gt.py` 需要 `torch`。
@@ -63,7 +63,7 @@ python board/scripts/eval_serial_vs_gt.py board/logs/log_toshiba_a4c_54f_newrule
 
 1. 量化损失可控：板端相对 PC 的 GT 命中率低 2~4 个百分点；部分类别板端甚至优于 PC。
 2. 确定性成立：两次断电重启结果逐帧一致（置信度差 0、位置差 0）。
-3. 唯一隐患：时序负 slack（WNS −0.921 ns），建议重建时把 FCLK 降到 100 MHz。
+3. 时序：已采用 100 MHz 收敛版（WNS **+0.336 ns**、0 失败端点）；120 MHz 版 WNS −0.921 ns 作为性能对比保留。
 
 ## 6. 新规则评测结果（2026-10-29）
 

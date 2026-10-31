@@ -34,12 +34,17 @@ export_design -format ip_catalog
 2) Block Design 组成：
    Zynq PS7 (FCLK0) ── AXI-Lite(控制) ── 卷积 IP
                     ── AXI-HP(数据) ── DMA/内存
-3) 时钟建议：FCLK0 = 100 MHz（当前工程为 120 MHz，存在 WNS=-0.921ns）
+3) 时钟：FCLK0 = 100 MHz（收敛版，WNS=+0.336ns；120 MHz 版 WNS=-0.921ns，仅作对比）
 4) 综合 → 实现 → 生成 bitstream
 5) Export Hardware（含 system_wrapper.bit + ps7_init.tcl）
 ```
 
 ## 3. SDK 应用与 BOOT.bin
+
+> **改频率时注意**：`src/vivado/system_bd.tcl` 里 FCLK0 已设为 100 MHz。改 FCLK 后必须从新实现导出 HDF，
+> 替换 hw platform 的 `ps7_init.c/h/tcl` 并**重新编译 FSBL**，再重打 BOOT.bin；否则 Zynq 的 FCLK 仍按旧 FSBL 配置运行
+> （只换位流会出现"假降频"）。
+
 
 > 包内 `src/software/xilinx.spec` 是小写文件名；在 SDK 工程中使用时复制为 `Xilinx.spec`
 > （链接参数 `-specs=Xilinx.spec` 需要该文件名），属工具链运行时约束。
@@ -87,7 +92,7 @@ PyTorch 权重 (Oct-20) → BN folding → 逐层 float32 导出
 
 ```
 ① 板端串口：image num = N；每帧 KP i 36/36；最后 ALL DONE N frames
-② 推理耗时 ≈ 421.5 ms/帧
+② 推理耗时 ≈ 496.6 ms/帧（100 MHz）
 ③ 用 sim/scripts/ 下脚本核对板端 vs PC 关键点一致性
 ```
 
@@ -97,7 +102,23 @@ PyTorch 权重 (Oct-20) → BN folding → 逐层 float32 导出
 |---|---|
 | 板端 GT 命中率（新规则，TOSHIBA A4C 54 帧） | **79.12%**（1538/1944） |
 | PC float 参考 | 77.88% |
-| 单帧耗时 | 421.5 ms |
-| WNS（120 MHz） | −0.921 ns（61 个失败端点，建议后续降到 100 MHz 重实现） |
-| 片上功耗估算 | 3.212 W（动态 2.999 + 静态 0.214） |
+| 单帧耗时（100 MHz） | 496.6 ms |
+| WNS（100 MHz） | **+0.336 ns，0 失败端点**（120 MHz 版 −0.921 ns/61 端点见 `reports/historical_120mhz/`） |
+| 片上功耗估算 | 2.953 W（动态 2.753 + 静态 0.200） |
 | 板级功耗 | **待实测**（测量步骤见 `board/README.md` 第 8 节） |
+
+## 8. 时序/功耗报告复测（批处理，不打开 GUI）
+
+包内提供 `build/rerun_reports.tcl`：重新打开同一实现（`impl_1`）重跑报告。
+
+```bat
+C:\Xilinx\Vivado\2018.3\bin\vivado.bat -mode batch -notrace ^
+  -source build\rerun_reports.tcl -tclargs D:\out_reports
+```
+
+> 该命令为 **批处理模式**，不会弹出 Vivado 窗口；运行日志写入当前目录的 `vivado.log` / `vivado.jou`。
+> 脚本里的工程路径默认指向 `D:/fpga_work/yolov4_tiny/...`，换机器时改第一行 `set XPR`。
+
+（该命令复测的是 120 MHz 历史版，结果与原始报告一致：WNS −0.921 ns / 61 失败端点，报告在 `reports/historical_120mhz/`。）
+
+交付版为 **100 MHz 收敛版**（WNS +0.336 ns、0 失败端点），报告见 `reports/timing_summary_routed.rpt` 等。

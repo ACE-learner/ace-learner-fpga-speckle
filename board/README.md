@@ -15,8 +15,8 @@
 |---|---|
 | `bitstream/system_wrapper.bit` | PL 位流（与 `build/reports/` 同一次实现，SHA256 见 `build/implementation_report.md`） |
 | `bitstream/yolov4_tiny.elf` | PS 应用（新规则：每框 argmax 类别 + 串口归一化关键点） |
-| `bitstream/zynq_fsbl.elf` | FSBL |
-| `bitstream/ps7_init.tcl` | PS 初始化 |
+| `bitstream/zynq_fsbl.elf` | FSBL（**100 MHz 时钟配置**，由新 HDF 的 ps7_init 重建） |
+| `bitstream/ps7_init.tcl` | PS 初始化（**100 MHz**；`0xF8000170=0x00300600`） |
 | `sd_boot_image.zip` | 解压得到 `BOOT.bin`（新固件；Zynq 启动镜像，文件名大写为运行时约束） |
 | `boot.bif` | bootgen 打包模板（包内相对路径） |
 | `weights/sd_weights_oct20.zip` | 解压得到 `yolov4_tiny_weights/`（42 个 BN 折叠 float32 权重，板端加载时 ×512 转 int16） |
@@ -46,7 +46,7 @@ powershell -ExecutionPolicy Bypass -File scripts/run_jtag.ps1
 
 # 出图 / 评测
 powershell -ExecutionPolicy Bypass -File scripts/render_results.ps1
-python scripts/eval_serial_vs_gt.py board/logs/log_toshiba_a4c_54f_newrule.txt data/images_toshiba_a4c data/labels_toshiba_a4c
+python scripts/eval_serial_vs_gt.py board/logs/log_toshiba_a4c_54f_100mhz.txt data/images_toshiba_a4c data/labels_toshiba_a4c
 ```
 
 ## 4. 板端输出协议
@@ -76,24 +76,21 @@ ALL DONE <N> frames
 
 | 文件 | 内容 |
 |---|---|
-| `log_toshiba_a4c_54f_newrule.txt` | **新规则**：TOSHIBA A4C 54 帧完整运行（帧 0..53，无截断），GT 命中 79.12% |
-| `log_philips_a3c_50f.txt` | Philips A3C/rca 50 帧（旧规则） |
-| `log_toshiba_a4c_54f.txt` | TOSHIBA A4C 54 帧（旧规则） |
-| `log_toshiba_a4c_54f_run2.txt` | 同一测试集第二次运行（确定性对比用） |
-| `log_powercycle_round1/2.txt` | 两次断电重启后的运行（确定性测试） |
-| `log_philips_a3c_run_before_fix.txt` | 修复 SD/FatFS 问题前的运行（历史对照） |
+| `log_toshiba_a4c_54f_100mhz.txt` | **100 MHz 交付版**：A4C 54 帧完整运行，**496.6 ms/帧、2.01 FPS**，GT 命中 79.12% |
+| `log_toshiba_a4c_54f.txt` | 120 MHz 历史版：A4C 54 帧，421.5 ms/帧（GT 命中 79.12%） |
+| `log_philips_a3c_50f.txt` | 120 MHz 历史版：Philips 50 帧 |
 
-> 旧规则日志对应"每类独立 argmax"解码，GT 命中 73.87%；新规则（每框 argmax 类别）为 79.12%。
+> 100 MHz 的配置方法、逐项对比见 `../build/implementation_report.md` 与 `06_文档与结果` 同名文档。
 
 ## 6. 结果图（`results/`）
 
 | 文件 | 说明 |
 |---|---|
-| `render_a4c_54f_newrule/` | 新规则 54 帧出图（`result_img*.png` + `demo.gif`） |
-| `result_newrule_a4c54_img0.png` | 新规则单帧样例 |
-| `result_sample_img0.png` | 旧规则单帧样例 |
+| `result_100mhz_a4c54_img0.png` | 100 MHz 交付版单帧（框 + 绿十字 + 编号 + 黄线） |
 | `result_montage_6frames.png` | 6 帧拼图 |
-| `result_demo_50frames.gif` | 50 帧动画 |
+| `result_sample_img0.png` | 120 MHz 历史版单帧 |
+
+> 完整 54 帧渲染图可用 `scripts/render_results.bat` 本地重新生成（输出到 `results/render_<时间戳>/`）。
 
 ## 7. 标准运行流程
 
@@ -107,7 +104,7 @@ ALL DONE <N> frames
 
 ## 8. 功耗测量（板级，12V 输入）
 
-板级功耗需实测（Vivado 的 3.212 W 是**片上估算**，不含 DDR/USB PHY/以太网 PHY/LDO）。
+板级功耗需实测（Vivado 的 2.953 W 是**片上估算**，不含 DDR/USB PHY/以太网 PHY/LDO）。
 
 1. 接线：12V 电源/适配器 → 串联式 DC 功率计（或可调电源+电流表）→ 板子 DC 座（5.5×2.1，内正外负）
 2. 测空闲：拔掉 SD 卡（或无 BOOT.bin），上电，稳定 10 s 记录 V/I/P
@@ -120,4 +117,4 @@ ALL DONE <N> frames
 | 推理中 | 12.0 |  |  | 54 帧运行窗口 |
 | 推理结束 | 12.0 |  |  | ALL DONE 后 |
 
-> 预计板级 4~7 W；报告时请把"板级实测"和"Vivado 片上估算 3.212 W"分开写。
+> 预计板级 4~7 W；报告时请把"板级实测"和"Vivado 片上估算 2.953 W"分开写。

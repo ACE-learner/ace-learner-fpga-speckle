@@ -55,15 +55,18 @@ if ($Python) {
     Set-Content -LiteralPath (Join-Path $Stage 'img_num.txt') -Value $bins -Encoding ASCII
 }
 
+Write-Host "正在解压权重到 SD 卡（42 个文件，约 21 MB，请稍候）..." -ForegroundColor Cyan
 # weights (zip root already is yolov4_tiny_weights/)
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 [System.IO.Compression.ZipFile]::ExtractToDirectory($Wzip, $Sd, [System.Text.Encoding]::UTF8)
 [System.IO.Compression.ZipFile]::ExtractToDirectory($BootZip, $Sd, [System.Text.Encoding]::UTF8)
 
+Write-Host "正在复制测试集到 SD 卡 $YTarget ..." -ForegroundColor Cyan
 New-Item -ItemType Directory -Force -Path $YTarget | Out-Null
 Copy-Item -Path (Join-Path $Stage '*') -Destination $YTarget -Force -Recurse
 Remove-Item $Stage -Recurse -Force -ErrorAction SilentlyContinue
 
+Write-Host "正在校验 SD 卡内容..." -ForegroundColor Cyan
 $bins = @(Get-ChildItem -LiteralPath $YTarget -Filter 'img*.bin').Count
 $pngs = @(Get-ChildItem -LiteralPath $YTarget -Filter 'img*.png').Count
 $num = (Get-Content -LiteralPath (Join-Path $YTarget 'img_num.txt') -ErrorAction SilentlyContinue).Trim()

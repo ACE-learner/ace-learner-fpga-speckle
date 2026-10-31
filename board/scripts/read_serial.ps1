@@ -149,6 +149,8 @@ $KFrames = @([regex]::Matches($Captured, '(?m)^K (\d+) \d+ ') |
 $OutputFrames = @([regex]::Matches($Captured, '(?m)^writing yolo_test\\out1_(\d+)\.bin\s*$') |
     ForEach-Object { [int]$_.Groups[1].Value } | Sort-Object -Unique)
 $InputErrors = @([regex]::Matches($Captured, 'ERROR\s*:\s*f_open returned\s+\d+')).Count
+$OpenErrors = @([regex]::Matches($Captured, 'cannot open ([^\r\n]+) \(rc=(\d+)\)'))
+$StopAtFrame = @([regex]::Matches($Captured, 'STOP at frame (\d+)'))
 
 # 检查首帧是否完整（截断的帧类别数会明显少于正常值 ~30）
 $KCountByFrame = @{}
@@ -159,9 +161,19 @@ foreach ($Match in [regex]::Matches($Captured, '(?m)^K (\d+) ')) {
 $FirstFrameTruncated = $false
 if ($KCountByFrame.Count -gt 0) {
     $FirstKey = ($KCountByFrame.Keys | ForEach-Object { [int]$_ } | Sort-Object)[0]
-    if ($KCountByFrame["$FirstKey"] -lt 20) { $FirstFrameTruncated = $true }
+    if ($KCountByFrame["$FirstKey"] -lt 30) { $FirstFrameTruncated = $true }
 }
 
+if ($OpenErrors.Count -gt 0) {
+    Write-Host ("板端读图失败：{0} 个文件打不开（第一次：{1}，FatFS rc={2}）。" -f $OpenErrors.Count, $OpenErrors[0].Groups[1].Value.Trim(), $OpenErrors[0].Groups[2].Value) -ForegroundColor Red
+    Write-Host '  → rc=4 表示文件不存在：SD 卡 yolo_test 内容不完整（只写了部分图片）。' -ForegroundColor Yellow
+    Write-Host '  → 修复：拔卡插读卡器，运行 board\scripts\prepare_sd_card.bat（勾选替换），' -ForegroundColor Yellow
+    Write-Host '     确认 yolo_test 下 img*.bin 数量 = img_num.txt，并含 img0..imgN.png。' -ForegroundColor Yellow
+    if ($StopAtFrame.Count -gt 0) { Write-Host ("  板端在帧 {0} 停止。" -f $StopAtFrame[0].Groups[1].Value) -ForegroundColor Yellow }
+}
+if ($Captured -notmatch 'image num') {
+    Write-Host '日志缺少启动头（image num）：抓取开始较晚，可能缺首帧；下次先开本脚本再复位/上电。' -ForegroundColor Yellow
+}
 if ($Buffer.Length -eq 0) {
     Write-Host "未收到任何串口数据：已确认 $Port 能打开，但板子没有输出。" -ForegroundColor Yellow
     Write-Host '请检查：板子是否真的上电/复位、TX/RX 是否接对、BOOT 模式是否正确。' -ForegroundColor Yellow
@@ -173,7 +185,13 @@ if ($Buffer.Length -eq 0) {
         Write-Host ("已捕获关键点：帧 {0}..{1}（{2} 帧），首帧不是 0。" -f $KFrames[0], $KFrames[-1], $KFrames.Count) -ForegroundColor Yellow
         Write-Host '原因：串口监听在板子开始跑之后才打开。下次先运行本脚本（看到"已打开串口"），再上电/复位板子。' -ForegroundColor Yellow
     } else {
-        Write-Host ("已捕获关键点：帧 0..{0}（{1} 帧），首帧完整。" -f $KFrames[-1], $KFrames.Count) -ForegroundColor Green
+        $f0 = [int]$KFrames[0]
+        $c0 = [int]$KCountByFrame["$f0"]
+        if ($c0 -lt 36) {
+            Write-Host ("已捕获关键点：帧 0..{0}（{1} 帧）；但首帧只有 {2}/36 类，可能漏了开头（建议重抓）。" -f $KFrames[-1], $KFrames.Count, $c0) -ForegroundColor Yellow
+        } else {
+            Write-Host ("已捕获关键点：帧 0..{0}（{1} 帧），首帧完整（36/36 类）。" -f $KFrames[-1], $KFrames.Count) -ForegroundColor Green
+        }
     }
 } elseif ($Processed.Count -gt 0) {
     Write-Host ("已捕获 FPGA 推理输出：帧 {0} 至 {1}，其中 f_open 错误 {2} 次。" -f $Processed[0], $Processed[-1], $InputErrors) -ForegroundColor Yellow

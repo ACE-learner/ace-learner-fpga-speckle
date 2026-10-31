@@ -62,7 +62,7 @@ python skill/pynq/03_env_and_offline_deploy/check_env.py
 | `python sim/scripts/paths.py` | `all paths ok: True` |
 | `python sim/scripts/generate_validation_results.py` | Philips 66.50%、Toshiba 73.87%、determinism 差分 0 |
 | `python sim/scripts/eval_board_gt.py` | 66.50% / 73.87%（legacy 旧解码规则日志） |
-| `python board/scripts/eval_serial_vs_gt.py board/logs/log_toshiba_a4c_54f_newrule.txt data/images_toshiba_a4c data/labels_toshiba_a4c` | 1538/1944 = **79.12%**（新规则） |
+| `python board/scripts/eval_serial_vs_gt.py board/logs/log_toshiba_a4c_54f_100mhz.txt data/images_toshiba_a4c data/labels_toshiba_a4c` | 1538/1944 = **79.12%**（新规则） |
 | `python sim/scripts/eval_pc_gt.py --set both` | 68.72% / 77.88% |
 | `python skill/validation/check_package.py` | `51+ checks, 0 failed` |
 

@@ -101,7 +101,7 @@ for name, frames in [('log_philips_a3c_50f.txt', 50), ('log_toshiba_a4c_54f.txt'
 print('\n[6] metrics (from sim/results/summary_metrics.csv)')
 p = os.path.join(ROOT, 'sim', 'results', 'summary_metrics.csv')
 if os.path.isfile(p):
-    rows = list(csv.DictReader(open(p, encoding='utf-8')))
+    rows = list(csv.DictReader(open(p, encoding='utf-8-sig')))
     got = {r['dataset']: float(r['board_gt_hit_percent']) for r in rows}
     check('philips board GT hit in [64,70]', 64 <= got.get('philips_a3c_rca_50f', -1) <= 70,
           'got %s' % got.get('philips_a3c_rca_50f'))
@@ -109,9 +109,9 @@ if os.path.isfile(p):
           'got %s' % got.get('toshiba_a4c_normal_54f'))
     ok = True
     for r in rows:
-        if abs(float(r['board_ms_per_frame']) - 421.5) > 5:
+        if not (abs(float(r['board_ms_per_frame']) - 496.6) <= 8 or abs(float(r['board_ms_per_frame']) - 421.57) <= 5):
             ok = False
-    check('inference ~421.5 ms/frame', ok)
+    check('inference ~496.6 ms/frame (100MHz; 421.5 legacy)', ok)
 
 # ---------- 7) 结果图 ----------
 print('\n[7] result images')

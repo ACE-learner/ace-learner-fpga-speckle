@@ -18,7 +18,7 @@ OUT = sys.argv[3] if len(sys.argv) > 3 else os.path.join(PROJECT_ROOT, '06_文�
 FONT = os.environ.get('FPGA_RENDER_FONT', '')
 NC = 36
 CLUSTER_PX = 3.0
-PARTIAL_MIN = 20   # 单帧类别数少于此值，视为串口截断，不渲染
+PARTIAL_MIN = 28   # 单帧类别数少于此值，视为串口截断，不渲染（正常 33~36 类/帧）
 
 os.makedirs(OUT, exist_ok=True)
 
