@@ -31,7 +31,13 @@ SETS = {
     'toshiba': {
         'images': os.path.join(DATA, 'images_toshiba_a4c'),
         'labels': os.path.join(DATA, 'labels_toshiba_a4c'),
-        'log': os.path.join(LOGS, 'log_toshiba_a4c_54f.txt'),
+        'log': os.path.join(LOGS, 'log_toshiba_a4c_54f_100mhz.txt'),
+        'label_pattern': 'g%d.txt',           # g0.txt ...
+    },
+    'siemens_rca': {
+        'images': os.path.join(DATA, 'images_siemens_a4c_rca'),
+        'labels': os.path.join(DATA, 'labels_siemens_a4c_rca'),
+        'log': os.path.join(LOGS, 'log_siemens_a4c_rca_56f_100mhz.txt'),
         'label_pattern': 'g%d.txt',           # g0.txt ...
     },
 }

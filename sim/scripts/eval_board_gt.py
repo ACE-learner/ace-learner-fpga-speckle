@@ -4,7 +4,7 @@
 用法：
   python eval_board_gt.py                  # 两组都评
   python eval_board_gt.py --set philips
-  python eval_board_gt.py --set toshiba --log board/logs/log_toshiba_a4c_54f.txt
+  python eval_board_gt.py --set toshiba --log board/logs/log_toshiba_a4c_54f_100mhz.txt
 输出：sim/results/per_class_board_<set>.csv + 控制台指标
 """
 import argparse

@@ -147,8 +147,8 @@ python board/scripts/eval_serial_vs_gt.py <串口日志> <图片目录> <标签�
 
 ## 9. 仓库整洁说明
 
-- 只保留 **两组最终实测日志**：`board/logs/log_toshiba_a4c_54f_100mhz.txt`、
-  `board/logs/log_siemens_a4c_rca_56f_100mhz.txt`；
+- 保留最终结果与验证必需的日志：TOSHIBA/Siemens 100 MHz 日志、确定性复跑 `log_powercycle_round1/2.txt`、Philips 对照日志；
+- 已删除旧 120 MHz 日志（`log_toshiba_a4c_54f.txt`）和重复串口日志（`serial_20261102_145526.txt`）；
 - `board/results/` 只保留 1 张最终结果示例，运行生成的 `render_*` 目录已加入 `.gitignore`；
 - 测试图片、标签、SHA256 清单随仓库提供；完整数据集不入 Git。
 
