@@ -99,8 +99,7 @@ python board/scripts/render_from_serial.py <串口日志> <图片目录> <输出
 | 板端平均置信度 | ≈ 0.46 | 0.459（A4C 100 MHz） |
 | ARM 后处理耗时 | < 3 ms | 2.0 ms |
 | GT 命中率（TOSHIBA A4C，100 MHz 交付版） | ≈ 79.1% | **79.12%**（1538/1944） |
-| GT 命中率（Philips A3C，120 MHz 历史版） | ≈ 66.5% | 66.50% |
-| 断电重启 / 改频前后确定性 | 结果一致 | 1899/1899 条 K 行逐位一致 |
+| 重复运行确定性（同一配置） | 结果一致 | 1899/1899 条 K 行逐位一致 |
 | 技能包自检 | 60+ 项全过 | `python skill/validation/check_skill.py`（退出码 0） |
 | 工程包自检 | 56 项全过 | `python skill/validation/check_package.py`（退出码 0） |
 

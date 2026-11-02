@@ -1,7 +1,7 @@
 {
   "name": "fpga-vision-bringup-validation-skill",
   "display_name": "FPGA 视觉加速上板与量化验收技能包",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "updated": "2026-11-02",
   "language": "zh-CN",
   "description": "从 YOLOv4-Tiny 超声散斑关键点检测工程提炼的可复用技能：软硬件划分、上板 bring-up、串口/日志、精度与性能量化验收、提交包自检。适用于 Zynq-7000/MPSoC/PYNQ 类 PL 加速 + PS 调度工程。",
@@ -38,40 +38,78 @@
       "title": "提示词工作流",
       "file": "prompt_workflows.md",
       "trigger": "需要 AI 协助方案取舍、疑难定位或验证设计，且要求结论可验证",
-      "inputs": ["平台资源与时序参数", "异常现象与日志", "已排除项"],
-      "outputs": ["结构化候选方案", "排查清单", "验证计划（每条含验证动作）"],
+      "inputs": [
+        "平台资源与时序参数",
+        "异常现象与日志",
+        "已排除项"
+      ],
+      "outputs": [
+        "结构化候选方案",
+        "排查清单",
+        "验证计划（每条含验证动作）"
+      ],
       "validation": "每条建议在 30 分钟内可做一次小实验证伪",
-      "failure_modes": ["纯软件题效果打折", "硬件物理层问题需人工检查连接/供电"]
+      "failure_modes": [
+        "纯软件题效果打折",
+        "硬件物理层问题需人工检查连接/供电"
+      ]
     },
     {
       "id": "workflow",
       "title": "端到端工作流",
       "file": "workflow.md",
       "trigger": "新题目冷启动或进入新阶段，需要知道下一步与过关标准",
-      "inputs": ["当前阶段", "已有产物（源码/位流/日志/报告）"],
-      "outputs": ["阶段产出物清单", "门禁结论（Pass/Fail + 证据路径）"],
+      "inputs": [
+        "当前阶段",
+        "已有产物（源码/位流/日志/报告）"
+      ],
+      "outputs": [
+        "阶段产出物清单",
+        "门禁结论（Pass/Fail + 证据路径）"
+      ],
       "validation": "门禁未过不得进入下一阶段",
-      "failure_modes": ["无板卡/无 GT 时需裁剪阶段"]
+      "failure_modes": [
+        "无板卡/无 GT 时需裁剪阶段"
+      ]
     },
     {
       "id": "case-templates",
       "title": "案例模板",
       "file": "case_templates.md",
       "trigger": "需要可直接套用的检查表/评测表/报告表",
-      "inputs": ["板卡型号", "测试集与 GT 格式"],
-      "outputs": ["填好的模板 A-F", "可写入报告的数据表"],
+      "inputs": [
+        "板卡型号",
+        "测试集与 GT 格式"
+      ],
+      "outputs": [
+        "填好的模板 A-F",
+        "可写入报告的数据表"
+      ],
       "validation": "模板中每个期望值都必须有报告/日志来源",
-      "failure_modes": ["无串口/无 SD 时需替换传输通道"]
+      "failure_modes": [
+        "无串口/无 SD 时需替换传输通道"
+      ]
     },
     {
       "id": "pitfalls",
       "title": "踩坑清单",
       "file": "pitfalls.md",
       "trigger": "出现无输出、乱码、精度骤降、时序违例、频率不生效等异常",
-      "inputs": ["现象", "日志", "最近改动", "硬件状态"],
-      "outputs": ["根因", "修复步骤", "验证证据"],
+      "inputs": [
+        "现象",
+        "日志",
+        "最近改动",
+        "硬件状态"
+      ],
+      "outputs": [
+        "根因",
+        "修复步骤",
+        "验证证据"
+      ],
       "validation": "修复后复跑原失败场景并通过",
-      "failure_modes": ["换平台（Kria/MPSoC）时启动链相关条目需替换"]
+      "failure_modes": [
+        "换平台（Kria/MPSoC）时启动链相关条目需替换"
+      ]
     }
   ],
   "supporting": [
@@ -111,13 +149,7 @@
     "board_ms_per_frame_100mhz": 496.6,
     "fps_100mhz": 2.01,
     "wns_ns_100mhz": 0.336,
-    "onchip_power_w_100mhz": 2.953,
-    "legacy_120mhz": {
-      "board_gt_hit_percent": 73.87,
-      "board_ms_per_frame": 421.5,
-      "wns_ns": -0.921,
-      "onchip_power_w": 3.212
-    }
+    "onchip_power_w_100mhz": 2.953
   },
   "reuse_notes": [
     "技能可单独复用；工程相关数字仅作为'已验证效果'证据，不是声称可迁移的指标",

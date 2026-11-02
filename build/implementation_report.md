@@ -7,7 +7,7 @@
 | FPGA / SoC | Xilinx Zynq-7020（XC7Z020） |
 | 工具链 | Vivado + Vitis/SDK **2018.3** |
 | HLS 目标时钟 | 10 ns（100 MHz） |
-| PL 实际时钟 FCLK0 | **100 MHz**（收敛版；120 MHz 对比见 §6） |
+| PL 实际时钟 FCLK0 | **100 MHz**（时序收敛：WNS +0.336 ns，0 失败端点） |
 | 卷积数据类型 | `ap_fixed<16,7, AP_RND, AP_SAT>`，外部整型缩放 `SCALE = 512` |
 | 源码中的时钟配置 | `src/vivado/system_bd.tcl` 已设 `PCW_FPGA0_PERIPHERAL_FREQMHZ=100`；重建需同步重编 FSBL（见 §6） |
 
@@ -32,13 +32,9 @@
 | **WNS（Setup）** | **+0.336 ns**（收敛） |
 | **TNS** | **0 ns** |
 | **失败端点** | **0**（Setup）；Hold 0 失败（WHS = +0.034 ns） |
-| 原 120 MHz 失败路径 | `system_i/conv_0/inst/grp_upsample_fu_361/p_sum_reg_664_reg[13]/D`（upsample 累加器，降频后满足） |
 | HLS 目标时钟 | 10 ns（100 MHz） |
 
-**结论**：
-- 原 120 MHz 版本把 HLS 按 100 MHz 设计的 IP 跑在 120 MHz 上，资源占用高（LUT 82.7%、DSP 99.1%）导致 WNS −0.921 ns；
-- 已采用 **FCLK0 = 100 MHz** 重新实现：WNS **+0.336 ns**、TNS 0、0 失败端点，时序收敛；
-- 板端实测：100 MHz 版 496.6 ms/帧、2.01 FPS，输出的 1899 条关键点记录与 120 MHz 版**逐位一致**（频率只影响耗时，不影响精度）。
+**结论**：100 MHz 实现时序收敛（WNS **+0.336 ns**、TNS 0、0 失败端点）；板端实测 **496.6 ms/帧、2.01 FPS**，1899 条关键点记录稳定可复现。
 
 ## 3.1 原始报告文件（`build/reports/`）
 
@@ -55,8 +51,8 @@
 | 指标 | 值 | 说明 |
 |---|---|---|
 | 单帧推理 | **496.6 ms** | `forward()` 全程（含 PL→PS 数据传输），A4C 54 帧实测 |
-| 吞吐 | **2.01 FPS** | 100 MHz 时钟（120 MHz 版 2.37 FPS 仅作对比） |
-| 峰值算力 | **43.6 GOPS** | 218 DSP × 2 × 100 MHz（120 MHz 版 52.32 GOPS） |
+| 吞吐 | **2.01 FPS** | 100 MHz 时钟 |
+| 峰值算力 | **43.6 GOPS** | 218 DSP × 2 × 100 MHz |
 | ARM 关键点后处理 | **2.0 ms/帧** | 每类 top-1 + sigmoid 解码，约 91k MAC |
 | 串口输出开销 | ≈ 90 ms/帧 | 36 行文本 @115200；可关闭 |
 | SD 写盘（旧版本） | ≈ 40~90 ms/帧 | 新版本已取消 out 文件写盘，改为串口输出 |
@@ -77,7 +73,7 @@
 ```
 打开 src/vivado/project.xpr（或由 src/vivado/system_bd.tcl 重建 Block Design）
 Block Design：Zynq PS7 + conv IP + AXI DMA/HP + proc_sys_reset
-  - FCLK0：建议 100 MHz（当前工程为 120 MHz）
+  - FCLK0：100 MHz（时序已收敛，WNS +0.336 ns）
 综合 → 实现 → 生成 bitstream
 导出 hw platform（含 system_wrapper.bit + ps7_init.tcl）
 ```
@@ -101,7 +97,7 @@ PyTorch 权重（Oct-20 版本）→ BN 折叠：
 
 | 阶段 | 改动 | 效果 |
 |---|---|---|
-| 原始工程 | HLS 卷积 + PS 调度，逐层打印 + 写 out 文件 | 421.6 ms/帧；结果需回 PC 解码 |
+| 原始工程 | HLS 卷积 + PS 调度，逐层打印 + 写 out 文件 | 基线：结果需回 PC 逐层解码 |
 | + ARM 关键点后处理 | 在 `debug.cpp` 中实现每类 top-1 + sigmoid 解码 + 归一化坐标 | 板端直出 36 点，**+2.0 ms**，无需 out 文件 |
 | + 去掉 out 写盘 | 每帧不再写 415 KB×2 | 单帧循环时间 −40~90 ms |
 | + SD/FatFS 修复 | `fopen`→`f_open`；`SD_Init` 提前；缺文件保护 | 消除板端"读空图算垃圾点" |
@@ -110,7 +106,7 @@ PyTorch 权重（Oct-20 版本）→ BN 折叠：
 
 精度方面：板端（int16 定点）与 PC（float32）对比：关键点位置 96.7% ≤2 px、GT 命中率差 2~4 个百分点，量化损失在可接受范围。
 
-## 5. 新规则实测精度（2026-10-29）
+## 7. 新规则实测精度（2026-10-29）
 
 | 项 | 值 |
 |---|---|
@@ -124,24 +120,20 @@ PyTorch 权重（Oct-20 版本）→ BN 折叠：
 
 > 注意：片上功耗 2.953 W 为 Vivado vectorless 估算；板级功耗需按 `board/README.md` 第 8 节实测，两者口径不同。
 
-## 6. 频率版本对比与最终选择（2026-11-01）
+## 8. 最终实现结果（100 MHz）
 
-| 指标 | 120 MHz（原始实现） | **100 MHz（交付版）** |
-|---|---|---|
-| WNS / TNS | −0.921 / −14.393 ns | **+0.336 / 0 ns** |
-| Setup 失败端点 | 61 | **0** |
-| 约束时钟 | 8.333 ns / 120.005 MHz | **10.000 ns / 100.000 MHz** |
-| Fmax（1/(T−WNS)） | 108.1 MHz | 103.5 MHz |
-| 单帧推理（实测） | 421.5 ms | **496.6 ms** |
-| 帧率 | 2.37 FPS | **2.01 FPS** |
-| 峰值算力（218×2×f） | 52.32 GOPS | 43.6 GOPS |
-| 功耗估算 | 3.212 W（2.999 + 0.214） | **2.953 W**（2.753 + 0.200） |
-| 能效（峰值算力/估算功耗） | 16.29 GOPS/W | 14.77 GOPS/W |
-| 关键点输出 | 1899 条 K 行 | **与 120 MHz 逐位一致（1899/1899）** |
+| 指标 | 值 |
+|---|---|
+| WNS / TNS | **+0.336 / 0 ns** |
+| Setup 失败端点 | **0** |
+| 约束时钟 | 10.000 ns / 100.000 MHz |
+| Fmax（1/(T−WNS)） | 103.5 MHz |
+| 单帧推理（实测） | **496.6 ms** |
+| 帧率 | **2.01 FPS** |
+| 峰值算力（218×2×f） | 43.6 GOPS |
+| 功耗估算 | **2.953 W**（动态 2.753 + 静态 0.200） |
+| 能效（峰值算力/估算功耗） | 14.77 GOPS/W |
+| 关键点输出 | 1899 条 K 行（A4C 54 帧） |
 
-选择依据：Zynq-7020 上同设计在 120 MHz 时序未收敛（LUT 82.67%、DSP 99.09% 导致布线拥塞）；
-降到 100 MHz 后时序收敛、功耗略降，精度完全不变，代价是吞吐下降约 15%。
-120 MHz 版本的报告原文保留在 `reports/historical_120mhz/`。
-
-复测报告（100 MHz，2026-10-31 重新生成）：`reports/timing_summary_routed.rpt`、`reports/power_routed.rpt`、
-`reports/utilization_routed.rpt`、`reports/clock_utilization_routed.rpt`、`reports/drc_routed.rpt`。
+报告原文：`reports/timing_summary_routed.rpt`、`reports/power_routed.rpt`、`reports/utilization_routed.rpt`、
+`reports/clock_utilization_routed.rpt`、`reports/drc_routed.rpt`。

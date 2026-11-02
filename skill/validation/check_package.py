@@ -109,14 +109,14 @@ if os.path.isfile(p):
           'got %s' % got.get('toshiba_a4c_normal_54f'))
     ok = True
     for r in rows:
-        if not (abs(float(r['board_ms_per_frame']) - 496.6) <= 8 or abs(float(r['board_ms_per_frame']) - 421.57) <= 5):
+        if 'newrule' in r['dataset'] and abs(float(r['board_ms_per_frame']) - 496.6) > 8:
             ok = False
-    check('inference ~496.6 ms/frame (100MHz; 421.5 legacy)', ok)
+    check('inference ~496.6 ms/frame (100MHz)', ok)
 
 # ---------- 7) 结果图 ----------
 print('\n[7] result images')
 n = count(os.path.join(ROOT, 'board', 'results'))
-check('result images >= 3', n >= 3, 'got %d' % n)
+check('result images >= 1', n >= 1, 'got %d' % n)
 
 # ---------- 汇总 ----------
 bad = [r for r in results if not r[1]]

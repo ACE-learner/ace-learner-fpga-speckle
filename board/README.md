@@ -77,18 +77,14 @@ ALL DONE <N> frames
 | 文件 | 内容 |
 |---|---|
 | `log_toshiba_a4c_54f_100mhz.txt` | **100 MHz 交付版**：A4C 54 帧完整运行，**496.6 ms/帧、2.01 FPS**，GT 命中 79.12% |
-| `log_toshiba_a4c_54f.txt` | 120 MHz 历史版：A4C 54 帧，421.5 ms/帧（GT 命中 79.12%） |
-| `log_philips_a3c_50f.txt` | 120 MHz 历史版：Philips 50 帧 |
 
-> 100 MHz 的配置方法、逐项对比见 `../build/implementation_report.md` 与 `06_文档与结果` 同名文档。
+> 早期验证日志保留在 `logs/` 内供追溯，不作为交付指标。
 
 ## 6. 结果图（`results/`）
 
 | 文件 | 说明 |
 |---|---|
 | `result_100mhz_a4c54_img0.png` | 100 MHz 交付版单帧（框 + 绿十字 + 编号 + 黄线） |
-| `result_montage_6frames.png` | 6 帧拼图 |
-| `result_sample_img0.png` | 120 MHz 历史版单帧 |
 
 > 完整 54 帧渲染图可用 `scripts/render_results.bat` 本地重新生成（输出到 `results/render_<时间戳>/`）。
 
