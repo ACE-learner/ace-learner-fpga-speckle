@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """验证工程包完整性 + 关键指标是否符合预期（仅用标准库，任何 Python 3 可运行）
 
 用法:
@@ -37,6 +37,7 @@ for d in ['src/hls', 'src/rtl', 'src/software', 'src/vivado', 'sim/scripts', 'si
           'build', 'board/bitstream', 'board/scripts', 'board/logs', 'board/results',
           'data/images_philips_a3c', 'data/labels_philips_a3c',
           'data/images_toshiba_a4c', 'data/labels_toshiba_a4c',
+          'data/images_siemens_a4c_rca', 'data/labels_siemens_a4c_rca',
           'data/reference_results', 'skill', 'skill/validation', 'report']:
     check('dir exists: ' + d, os.path.isdir(os.path.join(ROOT, d)))
 
@@ -79,10 +80,15 @@ n = count(os.path.join(ROOT, 'data', 'images_toshiba_a4c'), r'^img\d+\.png$')
 check('toshiba images == 54', n == 54, 'got %d' % n)
 n = count(os.path.join(ROOT, 'data', 'labels_toshiba_a4c'), r'^g\d+\.txt$')
 check('toshiba labels == 54', n == 54, 'got %d' % n)
+n = count(os.path.join(ROOT, 'data', 'images_siemens_a4c_rca'), r'^img\d+\.png$')
+check('siemens rca images == 56', n == 56, 'got %d' % n)
+n = count(os.path.join(ROOT, 'data', 'labels_siemens_a4c_rca'), r'^g\d+\.txt$')
+check('siemens rca labels == 56', n == 56, 'got %d' % n)
 
 # ---------- 5) 日志 ----------
 print('\n[5] board logs')
-for name, frames in [('log_philips_a3c_50f.txt', 50), ('log_toshiba_a4c_54f.txt', 54)]:
+for name, frames in [('log_toshiba_a4c_54f_100mhz.txt', 54),
+                     ('log_siemens_a4c_rca_56f_100mhz.txt', 56)]:
     p = os.path.join(ROOT, 'board', 'logs', name)
     if not os.path.isfile(p):
         check('log exists: ' + name, False)
@@ -93,9 +99,7 @@ for name, frames in [('log_philips_a3c_50f.txt', 50), ('log_toshiba_a4c_54f.txt'
         ids[m.group(1)] = 1
     check('%s frames == %d' % (name, frames), len(ids) == frames, 'got %d' % len(ids))
     check('%s has 36/36' % name, '36/36' in txt)
-    # 结束标记：新版固件才有 ALL DONE；旧日志用帧数判断即可
-    if frames == 50:
-        check('%s has ALL DONE' % name, 'ALL DONE' in txt)
+    check('%s has ALL DONE' % name, 'ALL DONE' in txt)
 
 # ---------- 6) 指标 ----------
 print('\n[6] metrics (from sim/results/summary_metrics.csv)')

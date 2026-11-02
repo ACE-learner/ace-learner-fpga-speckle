@@ -8,3 +8,6 @@ __pycache__/
 ~$*
 # 本机记住的图片目录（运行时生成）
 board/scripts/last_image_dir.txt
+
+# generated render outputs (keep only the curated sample)
+board/results/render_*/
