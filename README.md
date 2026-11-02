@@ -58,7 +58,11 @@ Zynq-7020 上的超声心肌散斑 **36 关键点**检测系统（2026 嵌入式
 命名约定：图像 `img<N>.png`，标签 `g<N>.txt`（`cls cx cy w h`，归一化）。
 Siemens 原始文件名 `0001.png`/`0001.txt` → `img0.png`/`g0.txt` 的映射见 `data/README_siemens_a4c_rca.md`。
 
-> 完整数据集如需公开，建议使用 **GitHub Release 压缩包**或 **Git LFS**，不要直接提交进普通 Git 历史。
+**完整数据集下载：** [GitHub Release dataset-v1.0](https://github.com/ACE-learner/ace-learner-fpga-speckle/releases/tag/dataset-v1.0)
+
+- `ultrasound_speckle_dataset_full_2026-11.zip`：**759.9 MB**，SHA256 `63ef79a38d6aad01b75030da0e30ba113f820525b77421c0b84d6a1eb86c1aff`
+- 同页附带 `MANIFEST.csv`（12,493 个文件清单）与 `README_dataset.md`
+- 直接下载：https://github.com/ACE-learner/ace-learner-fpga-speckle/releases/download/dataset-v1.0/ultrasound_speckle_dataset_full_2026-11.zip
 
 ## 4. 快速复现
 

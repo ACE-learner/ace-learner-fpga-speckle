@@ -45,7 +45,12 @@ A2C/A3C/A4C × 5 个切面序列与对应 labels，不适合直接放进普通 G
 | TOSHIBA A4C | `data/images_toshiba_a4c` + `data/labels_toshiba_a4c` | 54 |
 | Philips A3C | `data/images_philips_a3c` + `data/labels_philips_a3c` | 50 |
 
-完整数据集如需公开，建议使用 GitHub Release 压缩包或 Git LFS，不要直接提交进普通 Git 历史。
+完整数据集已发布为 GitHub Release：
+
+- 页面：https://github.com/ACE-learner/ace-learner-fpga-speckle/releases/tag/dataset-v1.0
+- 压缩包：`ultrasound_speckle_dataset_full_2026-11.zip`（759.9 MB，SHA256 `63ef79a...c1aff`）
+
+不要直接提交进普通 Git 历史。
 
 ## 版权与使用
 
