@@ -10,6 +10,13 @@ Zynq-7020 上的超声心肌散斑 **36 关键点**检测系统（2026 嵌入式
 - 精度：TOSHIBA A4C 54 帧板端 GT 命中 **79.12%**（PC 浮点 77.88%），
   Siemens A4C rca 56 帧板端 GT 命中 **77.48%**
 
+## 发布
+
+- **工程包 v1.4**：https://github.com/ACE-learner/ace-learner-fpga-speckle/releases/tag/v1.4
+  （源码 + 位流 + 脚本 + 三组测试数据 + 报告，约 79 MB）
+- **完整数据集 v1.0**：https://github.com/ACE-learner/ace-learner-fpga-speckle/releases/tag/dataset-v1.0
+  （759.9 MB zip + MANIFEST + README）
+
 ---
 
 ## 1. 系统结构
