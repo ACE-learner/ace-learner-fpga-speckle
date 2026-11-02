@@ -47,11 +47,41 @@ except Exception:
 
 colors = [tuple(int(v * 255) for v in colorsys.hsv_to_rgb(c / NC, 0.95, 1.0)) for c in range(NC)]
 
+_IMG_EXTS = ('.png', '.jpg', '.jpeg', '.bmp')
+_img_cache = None
+
+
+def _natkey(name):
+    return [int(x) if x.isdigit() else x.lower() for x in re.split(r'(\d+)', name)]
+
+
+def _image_list():
+    global _img_cache
+    if _img_cache is None:
+        files = [f for f in os.listdir(IMGDIR) if f.lower().endswith(_IMG_EXTS)]
+        _img_cache = sorted(files, key=_natkey)
+    return _img_cache
+
+
+def image_path(f):
+    """优先 img<N>.png；否则按自然排序取第 N 张（支持 0001.png 等命名）"""
+    p0 = os.path.join(IMGDIR, 'img%d.png' % f)
+    if os.path.exists(p0):
+        return p0
+    lst = _image_list()
+    if 0 <= f < len(lst):
+        return os.path.join(IMGDIR, lst[f])
+    return p0
+
+
+
 counts = []
 skipped = []
+missing = []
 for f in sorted(board):
-    p = os.path.join(IMGDIR, 'img%d.png' % f)
+    p = image_path(f)
     if not os.path.exists(p):
+        missing.append(f)
         continue
     img = Image.open(p).convert('RGB')
     iw, ih = img.size
@@ -98,6 +128,8 @@ for f in sorted(board):
     img.save(os.path.join(OUT, 'result_img%d.png' % f))
     counts.append(npos)
 
+if missing:
+    print('[WARN] 缺少图片的帧: %s' % ','.join(str(x) for x in missing[:20]))
 if not counts:
     print('[ERROR] 没有渲染出任何帧：日志帧号与图片目录不匹配。')
     print('        日志: %s' % LOG)

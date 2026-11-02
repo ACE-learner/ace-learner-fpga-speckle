@@ -6,3 +6,5 @@ __pycache__/
 .git/
 *.tmp
 ~$*
+# 本机记住的图片目录（运行时生成）
+board/scripts/last_image_dir.txt

@@ -36,3 +36,7 @@ $Enc = Join-Path $PSScriptRoot 'encode_images.py'
 if ($LASTEXITCODE -ne 0) { throw 'encode failed' }
 $bins = @(Get-ChildItem -LiteralPath $YTarget -Filter 'img*.bin').Count
 Write-Host "written $bins frames to $YTarget" -ForegroundColor Green
+
+$Resolved = (Resolve-Path -LiteralPath $SourceDir).Path
+Set-Content -LiteralPath (Join-Path $PSScriptRoot 'last_image_dir.txt') -Value $Resolved -Encoding UTF8
+Write-Host "记住图片目录（渲染时会自动使用）: $Resolved" -ForegroundColor Cyan

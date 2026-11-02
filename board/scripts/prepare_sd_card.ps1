@@ -77,3 +77,7 @@ Write-Host "SD card ready: $Sd" -ForegroundColor Green
 Write-Host "  BOOT.bin             <- board/sd_boot_image.zip"
 Write-Host "  yolov4_tiny_weights  <- board/weights/sd_weights_oct20.zip (42 files)"
 Write-Host "  yolo_test            <- $ImagesDir ($bins frames)"
+
+$Resolved = (Resolve-Path -LiteralPath $ImagesDir).Path
+Set-Content -LiteralPath (Join-Path $PSScriptRoot 'last_image_dir.txt') -Value $Resolved -Encoding UTF8
+Write-Host "记住图片目录（渲染时会自动使用）: $Resolved" -ForegroundColor Cyan
