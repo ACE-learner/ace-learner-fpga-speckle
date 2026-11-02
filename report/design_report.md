@@ -128,13 +128,17 @@ PC：图片编码 / 串口日志 / 结果渲染 / GT 评测
 | "精度突然变差"实为权重版本/旧结果文件 | 踩坑 P7/P10；校验脚本（哈希/帧数批次校验）|
 | 结果图把 36 类画成 36 个点 | 踩坑 P9；去重位置数统计口径 |
 | 断电重启验证确定性 | 五层验证法 L5；案例模板 A4 |
+| 降频后帧时间不变（"假降频"） | 踩坑 P18；案例模板 E（启动链四件套核对） |
+| 技能包从"散装文档"升级为可自检、可迁移的技能包（v1.1） | 技能卡结构（触发/输入/步骤/输出/验证/失效）+ `workflow.md` 门禁 + `evidence.md` 证据索引 + `validation/check_skill.py` |
+| 提交包残留调试日志/重复渲染 | 案例模板 F（提交合规）+ 清理规则 + 自检脚本检查文档引用有效性 |
 
 ## 8. 复现说明
 
 最短复现路径（详见根目录 `README.md`）：
 1. SD 卡 FAT32 → 放入 `BOOT.bin`、`yolov4_tiny_weights/`、`yolo_test/`（图片 + img_num.txt）；
-2. 插卡上电 → 串口 115200 观察 `image num`、`KP i 36/36`、`ALL DONE`；
+2. 插卡上电 → 串口 115200 观察 `image num`、`KP i 36/36`（多数帧 33–36 类，属正常）、`ALL DONE`；
 3. PC 用 `board/scripts/render_from_serial.py` 出图；
-4. 用 `sim/scripts/` 复跑一致性/精度/确定性验证。
+4. 用 `sim/scripts/` 复跑一致性/精度/确定性验证；
+5. 提交前跑两个自检：`python skill/validation/check_skill.py` 与 `python skill/validation/check_package.py`（均要求退出码 0）。
 
 完整重建（HLS→Vivado→SDK→BOOT.bin）见 `build/README.md`。

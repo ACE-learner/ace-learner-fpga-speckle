@@ -46,7 +46,7 @@
 | `build/` | 可复现构建脚本 + 综合实现报告（资源/时序/功耗） |
 | `board/` | 板端工程：位流、BOOT.bin、ELF、运行脚本（`board/scripts/`，全部相对路径）、实测日志、结果图 |
 | `data/` | 测试数据（两组序列的图片 + GT 标签）与参考结果 |
-| `skill/` | 技能包：提示词工作流、案例模板、校验脚本、踩坑清单 |
+| `skill/` | 技能包 v1.1：总览 + 机器清单（skill.json）+ 工作流 + 8 组提示词 + 6 份案例模板 + 18 条踩坑 + 证据索引 + 自检脚本 + 通用 PYNQ 技能 |
 | `report/` | 设计报告 + 大模型协作记录 |
 
 ---
@@ -59,14 +59,14 @@
 2. 直接双击 `board/scripts/prepare_sd_card.bat`（自动写 BOOT.bin + 权重 + 测试集），或手动拷贝到卡根目录：
    - 解压 `board/weights/sd_weights_oct20.zip` → 得到 `yolov4_tiny_weights/`（42 个 int16 权重文件）
    - 解压 `board/sd_boot_image.zip` → 得到 `BOOT.bin`（Zynq 启动镜像，**文件名必须大写**）
-   - `data/images_philips_a3c/img*.bin`（示例已编码 6 帧）→ 卡内 **`yolo_test/`**
+   - `data/images_philips_a3c/img*.bin`（示例已编码 50 帧；也可直接跑 `board/scripts/prepare_sd_card.bat` 自动写卡）→ 卡内 **`yolo_test/`**
 3. 板子 BOOT 切到 SD，插卡上电
 4. 串口 115200 应看到：
    ```
    Yolo4 Tiny Test
-   image num = 6
+   image num = 50
    KPT 0 2003 / KP 0 36/36 / K 0 0 0.63 0.74 ...
-   ALL DONE 6 frames
+   ALL DONE 50 frames
    ```
 
 ### 路径 B：JTAG 下载运行（需要 Vivado/SDK 2018.3）
@@ -98,12 +98,14 @@ python board/scripts/render_from_serial.py <串口日志> <图片目录> <输出
 | 检查项 | 期望值 | 实测 |
 |---|---|---|
 | 推理耗时（100 MHz） | ≈ 496.6 ms/帧 | 496.54 / 496.60 ms（实测） |
-| 每帧关键点类别数 | 36/36 | 36/36 |
-| 板端平均置信度 | ≈ 0.50 | 0.507（Philips）/ 0.470（TOSHIBA） |
+| 每帧关键点类别数 | 33–36（均值 35.2） | `KP 36/36` 27/54 帧；其余 33–35 类 |
+| 板端平均置信度 | ≈ 0.46 | 0.459（A4C 100 MHz） |
 | ARM 后处理耗时 | < 3 ms | 2.0 ms |
-| GT 命中率（TOSHIBA A4C） | ≈ 73.9% | 73.87% |
-| GT 命中率（Philips A3C） | ≈ 66.5% | 66.50% |
-| 断电重启确定性 | 结果一致 | conf 差 0.000000、位置差 0.00 px |
+| GT 命中率（TOSHIBA A4C，100 MHz 交付版） | ≈ 79.1% | **79.12%**（1538/1944） |
+| GT 命中率（Philips A3C，120 MHz 历史版） | ≈ 66.5% | 66.50% |
+| 断电重启 / 改频前后确定性 | 结果一致 | 1899/1899 条 K 行逐位一致 |
+| 技能包自检 | 60+ 项全过 | `python skill/validation/check_skill.py`（退出码 0） |
+| 工程包自检 | 56 项全过 | `python skill/validation/check_package.py`（退出码 0） |
 
 ---
 
@@ -147,11 +149,11 @@ python board/scripts/render_from_serial.py <串口日志> <图片目录> <输出
 | 指南要求 | 本包位置 | 内容 |
 |---|---|---|
 | 3.3.5.1 完整工程文件与源码 | `src/` | `hls/`（HLS C++ 源）、`rtl/`（HLS 导出 Verilog）、`software/`（PS C++ 源）、`vivado/`（BD tcl / 约束 / xpr） |
-| 3.3.5.1 仿真或验证结果 | `sim/` | 验证脚本 + CVS 结果（板端/PC/确定性/新规则）+ `pc_reference/` 模型代码 |
+| 3.3.5.1 仿真或验证结果 | `sim/` | 验证脚本 + CSV 结果（板端/PC/确定性/新规则）+ `pc_reference/` 模型代码 |
 | 3.3.5.1 综合与实现报告 | `build/` | `reports/`（资源/时序/功耗/DRC 原文）+ `implementation_report.md` |
 | 3.3.5.1 上板工程/运行脚本/实测输出/参考比对 | `board/` | 位流/BOOT/ELF、`scripts/` 运行脚本、`logs/` 串口日志、`results/` 结果图 |
 | 3.3.5.1 可复现构建脚本 | `build/` | `build_bsp_and_app.tcl` + `README.md`（HLS→Vivado→SDK→bootgen 步骤） |
-| 3.3.5.2 技能包 | `skill/` | `README.md` + 提示词工作流/案例模板/校验脚本/踩坑清单 + 通用 PYNQ 技能 |
+| 3.3.5.2 技能包 | `skill/` | `README.md` + `skill.json` + `workflow.md` + 8 组提示词 + 6 份案例模板 + 18 条踩坑 + `evidence.md` + `validation/check_skill.py` + 通用 PYNQ 技能 |
 | 3.3.5.3 设计报告 | `report/` | `design_report.md` + `llm_collaboration_record.md` + `figures/` |
 | 3.3.5.4 命名规范 | 全包 | 所有目录/文件名为纯英文小写（字母/数字/下划线/连字符），中文只在文件正文 |
 
